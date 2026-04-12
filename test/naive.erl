@@ -3,7 +3,7 @@
 
 start_link() ->
 	start_link(0).
-start_link(Value) ->
+start_link(Value) when Value >= 0 ->
 	spawn(?MODULE, loop, [Value]).
 
 loop(Index) ->
@@ -16,8 +16,10 @@ loop(Index) ->
 		{From, _} -> From ! error, loop(Index)
 	end.
 
-rpc(Pid, Cmd) ->
-	Pid ! Cmd,
+rpc(Pid, {From, Cmd}) ->
+	Pid ! {From, Cmd}, %% just to remember form
 	receive
 		Answer -> Answer
-	end.
+	end;
+
+rpc(_, _) -> {error, cmd_not_accepted}.
