@@ -25,13 +25,34 @@ start_link() ->
 %%                  shutdown => shutdown(), % optional
 %%                  type => worker(),       % optional
 %%                  modules => modules()}   % optional
+
 init([]) ->
+    application:start(ranch),
     SupFlags = #{
-        strategy => one_for_all,
-        intensity => 0,
-        period => 1
+        strategy => one_for_one,
+        intensity => 1,
+        period => 5
     },
-    ChildSpecs = [],
+
+    ChildSpecs = [
+        #{
+            id => counter_server,
+            start => {counter_server, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [counter_server]
+        },
+        #{
+            id => counter_http_server,
+            start => {counter_http_server, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [counter_http_server]
+        }
+    ],
+
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions
