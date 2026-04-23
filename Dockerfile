@@ -18,25 +18,7 @@ RUN rebar3 -v
 RUN rm -rf rebar.lock && rm -rf _build
 RUN DIAGNOSTIC=1 rebar3 get-deps && rebar3 compile
 
-RUN rebar3 as prod release
-
-# Stage 2: Runtime stage
-# Uses a fresh Alpine image for the smallest possible footprint
-FROM alpine:3.19
-
-# Install runtime dependencies required by Erlang (openssl, ncurses, etc.)
-RUN apk add --no-cache openssl ncurses libstdc++
-
-# Set working directory
-WORKDIR /app
-
-# Copy the release from the builder stage
-# Adjust the path based on your rebar.config (default: _build/prod/rel/<app_name>)
-COPY --from=builder /build/_build/prod/rel/counter ./
-
 # Set the entry point to start your application
 EXPOSE 8080
 
-ENTRYPOINT ["/app/bin/counter"]
-CMD ["foreground"]
-
+ENTRYPOINT ["rebar3", "shell"]
